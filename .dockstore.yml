@@ -1,0 +1,10 @@
+version: 1.2
+workflows:
+   - name: "annotate_eqtl_variants"
+     subclass: WDL
+     primaryDescriptorPath: /eqtl_annotations/eqtl_annotations.wdl
+     filters:
+        branches:
+          - main
+        tags:
+          - /.*/
