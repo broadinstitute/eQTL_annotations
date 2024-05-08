@@ -23,7 +23,7 @@ def main():
     # add this peak group distance to the finemapped results
     finemapped_df[f'{library}_peak_dist']  = merged_peak_idx[f'{library}_peak_dist'].values
     print('saving')
-    finemapped_df.to_csv('finemapped_results.tsv', sep='\t', header=True)
+    finemapped_df.to_csv('finemapped_results.tsv', sep='\t', header=True, index=False)
 
 if __name__ == '__main__':
     main()

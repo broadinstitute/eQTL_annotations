@@ -21,4 +21,4 @@ fm_file = finemapped_df[['chr', 'pos', 'pos']]
 fm_file.dropna(inplace=True)
 fm_file.to_csv('sample_vars.bed.gz', sep='\t', header=None, index=None)
 finemapped_df.dropna(inplace=True)
-finemapped_df.to_csv(f'finemapped_results.tsv', sep='\t', header=True)
+finemapped_df.to_csv(f'finemapped_results.tsv', sep='\t', header=True, index=False)

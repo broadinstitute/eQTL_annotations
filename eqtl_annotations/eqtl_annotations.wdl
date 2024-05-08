@@ -33,7 +33,7 @@ task peak_overlaps {
         FM_ARRAY=(~{sep=" " finemapped_results}) # Load array into bash variable
         NAME_ARRAY=(~{sep=" " fm_group_names})
 
-        for i in $(seq 0 ${fm_length}) #finemap_result in ${finemapped_results}
+        for (( i = 0; i < ~{fm_length}; i++ )) #finemap_result in ${finemapped_results}
         do
             echo ${FM_ARRAY[$i]}
             micromamba run -n tools2 python3 get_finemap_bed.py ${FM_ARRAY[$i]} ${NAME_ARRAY[$i]}
@@ -57,4 +57,13 @@ task peak_overlaps {
     runtime {
         docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
     }
+}
+
+task gtex_vep_overlap{
+    input {
+        Array[File] finemapped_results
+        File gtex_vep
+    }
+
+
 }
