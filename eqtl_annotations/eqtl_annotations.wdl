@@ -65,5 +65,6 @@ task gtex_vep_overlap{
         File gtex_vep
     }
 
-
+    command <<<
+    >>>
 }
