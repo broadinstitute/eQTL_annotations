@@ -16,14 +16,14 @@ def main():
 
     finemapped_df = pd.read_table(args.finemap_result)
 
-    finemapped_df.dropna(inplace=True)
     df = pd.DataFrame({'chr':finemapped_df.chr, 'pos':finemapped_df.pos.astype(int)}).set_index(['chr', 'pos'])
 
     min_peak_pos_all = peaks.reset_index().groupby(['chr', 'pos'])[f'{library}_peak_dist'].min()
     merged_peak_idx = df.reset_index().merge(min_peak_pos_all, how='left', on=['chr', 'pos'])
+    # add this peak group distance to the finemapped results
     finemapped_df[f'{library}_peak_dist']  = merged_peak_idx[f'{library}_peak_dist'].values
     print('saving')
-    finemapped_df.to_parquet(f'{args.group_name}_finemap_CHIP_ATAC_overlap.parquet')
+    finemapped_df.to_csv('finemapped_results.tsv', sep='\t', header=True)
 
 if __name__ == '__main__':
     main()
