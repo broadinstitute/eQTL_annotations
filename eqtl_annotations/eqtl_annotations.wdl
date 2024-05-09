@@ -5,6 +5,7 @@ workflow annotate_eqtl_variants {
         Array[File] finemapped_results
         Array[String] fm_group_names
         Array[File] peakfiles
+        File gtex_vep
         String git_branch = "main"
     }
 
@@ -16,8 +17,16 @@ workflow annotate_eqtl_variants {
             git_branch=git_branch
     }
 
+    call gtex_vep_overlap {
+        input:
+            finemapped_results=finemapped_results,
+            fm_group_names=fm_group_names,
+            gtex_vep=gtex_vep,
+            git_branch=git_branch
+    }
+
     output {
-        Array[File] fm_with_peak_distance = peak_overlaps.fm_with_peak_distance
+        Array[File] fm_annotations = gtex_vep_overlap.fm_peaks_gtex
     }
 }
 
@@ -64,12 +73,25 @@ task peak_overlaps {
     }
 }
 
-task gtex_vep_overlap{
+task gtex_vep_overlap {
     input {
         Array[File] finemapped_results
+        Array[String] fm_group_names
         File gtex_vep
+        String git_branch
     }
 
     command <<<
+    set -ex
+    (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
+    micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -f ${finemapped_results} -n ${fm_group_names} -g ${gtex_vep}
     >>>
+
+    output {
+        Array[File] fm_peaks_gtex = glob("*_finemap_CHIP_ATAC_GTEx_overlap.tsv")
+    }
+
+    runtime {
+        docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
+    }
 }
