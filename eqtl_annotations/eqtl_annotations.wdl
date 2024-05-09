@@ -19,7 +19,7 @@ workflow annotate_eqtl_variants {
 
     call gtex_vep_overlap {
         input:
-            finemapped_results=finemapped_results,
+            finemapped_results=peak_overlaps.fm_with_peak_distance,
             fm_group_names=fm_group_names,
             gtex_vep=gtex_vep,
             git_branch=git_branch
@@ -84,7 +84,7 @@ task gtex_vep_overlap {
     command <<<
     set -ex
     (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
-    micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -f ${finemapped_results} -n ${fm_group_names} -g ${gtex_vep}
+    micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -f ${sep=' ' finemapped_results} -n ${sep=' ' fm_group_names} -g ${gtex_vep}
     >>>
 
     output {
