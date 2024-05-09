@@ -35,6 +35,7 @@ task peak_overlaps {
         Array[File] finemapped_results
         Array[String] fm_group_names
         Array[File] peakfiles
+        String plink_bim_path
         String git_branch
     }
 
@@ -44,6 +45,10 @@ task peak_overlaps {
         set -ex
         (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
         micromamba -n tools2 install bioconda::bedtools -y
+
+        # convert plink.bim to a bed.gz with chr, pos, pos, variant_id
+        gsutil cat ${plink_bim_path} | awk -F '\t' -v OFS='\t' '{print $1, $4, $4, $2}' | gzip -c > bim_to_bed.bed.gz
+        zcat bim_to_bed.bed.gz | sort -k1,1 -k2,2n  | gzip -c > bim_to_bed.sorted.bed.gz
         FM_ARRAY=(~{sep=" " finemapped_results}) # Load array into bash variable
         NAME_ARRAY=(~{sep=" " fm_group_names})
 
@@ -51,12 +56,12 @@ task peak_overlaps {
         do
             echo ${FM_ARRAY[$i]}
             micromamba run -n tools2 python3 /app/eqtl_annotations/get_finemap_bed.py ${FM_ARRAY[$i]} ${NAME_ARRAY[$i]}
-            zcat sample_vars.bed.gz | sort -k1,1 -k2,2n  | gzip -c > sample_vars.sorted.bed.gz
             for peakfile in ~{sep=" " peakfiles}
             do
                 echo $peakfile
-                zcat $peakfile | sort -k1,1 -k2,2n | cut -f -3 > temp_file.bed
-                micromamba run -n tools2 bedtools closest -d -a sample_vars.sorted.bed.gz -b temp_file.bed | gzip -c > peak_dists.bed.gz
+                zcat $peakfile | sort -k1,1 -k2,2n | cut -f -3 > peak_file.bed
+                micromamba run -n tools2 bedtools closest -d -a bim_to_bed.sorted.bed.gz -b peak_file.bed | gzip -c > peak_dists.bed.gz
+                # TODO: fix this loop, i think some things can be moved around/changed now ?
                 micromamba run -n tools2 python3 /app/eqtl_annotations/combine_peaks_fm.py -p peak_dists.bed.gz -a $peakfile -f finemapped_results.tsv -g ${NAME_ARRAY[$i]}
             done
             cat finemapped_results.tsv > ${NAME_ARRAY[$i]}_ATAC_CHIP_peaks_finemapped_results.tsv
