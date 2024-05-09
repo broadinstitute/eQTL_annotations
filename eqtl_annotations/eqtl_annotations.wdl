@@ -81,6 +81,8 @@ task gtex_vep_overlap {
         String git_branch
     }
 
+    Int disk_size = 1 + floor(size(gtex_vep, "GB"))
+
     command {
     set -ex
     (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
@@ -93,5 +95,9 @@ task gtex_vep_overlap {
 
     runtime {
         docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
+        cpu: 1
+        memory: "16GB"
+        preemptible: 1
+        disks: "local-disk ~{disk_size} HDD"
     }
 }
