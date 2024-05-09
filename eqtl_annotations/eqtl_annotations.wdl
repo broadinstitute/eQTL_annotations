@@ -75,7 +75,7 @@ task peak_overlaps {
 
 task gtex_vep_overlap {
     input {
-        Array[File] finemapped_results
+        Array[String] finemapped_results
         Array[String] fm_group_names
         File gtex_vep
         String git_branch
