@@ -81,11 +81,11 @@ task gtex_vep_overlap {
         String git_branch
     }
 
-    command <<<
+    command {
     set -ex
     (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
     micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -f ${sep=' ' finemapped_results} -n ${sep=' ' fm_group_names} -g ${gtex_vep}
-    >>>
+    }
 
     output {
         Array[File] fm_peaks_gtex = glob("*_finemap_CHIP_ATAC_GTEx_overlap.tsv")
