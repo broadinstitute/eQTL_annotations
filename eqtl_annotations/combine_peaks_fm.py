@@ -27,7 +27,7 @@ def main():
     # save off summary info for all background peaks
     peaks[f'{library}_less_than_500'] = peaks[f'{library}_peak_dist'] < 500
     peaks[f'{library}_in_a_peak'] = peaks[f'{library}_peak_dist'] == 0
-    peaks.reset_index()[['chr', 'pos', f'{library}_peak_dist' f'{library}_less_than_500', f'{library}_in_a_peak']].to_csv(f'{library}_peak_stats.tsv',
+    peaks.reset_index()[['chr', 'pos', f'{library}_peak_dist', f'{library}_less_than_500', f'{library}_in_a_peak']].to_csv(f'{library}_peak_stats.tsv',
                                                                                                                           sep='\t', header=True, index=False)
 
 if __name__ == '__main__':
