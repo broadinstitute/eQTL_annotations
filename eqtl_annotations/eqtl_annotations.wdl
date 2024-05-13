@@ -79,6 +79,8 @@ task peak_overlaps {
 
     runtime {
         docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
+        cpu: 2
+        memory: "32GB"
     }
 }
 
