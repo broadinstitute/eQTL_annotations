@@ -27,6 +27,7 @@ workflow annotate_eqtl_variants {
 
     output {
         Array[File] fm_annotations = gtex_vep_overlap.fm_peaks_gtex
+        Array[File] all_variant_peak_stats = peak_overlaps.all_variant_peak_stats
     }
 }
 
@@ -61,7 +62,6 @@ task peak_overlaps {
                 echo $peakfile
                 zcat $peakfile | sort -k1,1 -k2,2n | cut -f -3 > peak_file.bed
                 micromamba run -n tools2 bedtools closest -d -a bim_to_bed.sorted.bed.gz -b peak_file.bed | gzip -c > peak_dists.bed.gz
-                # TODO: fix this loop, i think some things can be moved around/changed now ?
                 micromamba run -n tools2 python3 /app/eqtl_annotations/combine_peaks_fm.py -p peak_dists.bed.gz -a $peakfile -f finemapped_results.tsv -g ${NAME_ARRAY[$i]}
             done
             cat finemapped_results.tsv > ${NAME_ARRAY[$i]}_ATAC_CHIP_peaks_finemapped_results.tsv
@@ -71,6 +71,7 @@ task peak_overlaps {
 
     output {
         Array[File] fm_with_peak_distance = glob("*_ATAC_CHIP_peaks_finemapped_results.tsv")
+        Array[File] all_variant_peak_stats = glob("*_peak_stats.tsv")
     }
 
     runtime {
