@@ -5,42 +5,41 @@ workflow annotate_eqtl_variants {
         Array[File] finemapped_results
         Array[String] fm_group_names
         Array[File] peakfiles
+        Array[String] peakfile_names
+        File plink_bim_path
         File gtex_vep
         String git_branch = "main"
     }
 
     call peak_overlaps {
         input:
-            finemapped_results=finemapped_results,
-            fm_group_names=fm_group_names,
             peakfiles=peakfiles,
+            peakfile_names=peakfile_names,
+            plink_bim_path=plink_bim_path,
             git_branch=git_branch
     }
 
-    call gtex_vep_overlap {
-        input:
-            finemapped_results=peak_overlaps.fm_with_peak_distance,
-            fm_group_names=fm_group_names,
-            gtex_vep=gtex_vep,
-            git_branch=git_branch
-    }
+    # call gtex_vep_overlap {
+    #     input:
+    #         finemapped_results=finemapped_results,
+    #         fm_group_names=fm_group_names,
+    #         gtex_vep=gtex_vep,
+    #         git_branch=git_branch
+    # }
 
     output {
-        Array[File] fm_annotations = gtex_vep_overlap.fm_peaks_gtex
-        Array[File] all_variant_peak_stats = peak_overlaps.all_variant_peak_stats
+        #Array[File] fm_annotations = gtex_vep_overlap.fm_peaks_gtex
+        File all_variant_peak_stats = peak_overlaps.all_variant_peak_stats
     }
 }
 
 task peak_overlaps {
     input {
-        Array[File] finemapped_results
-        Array[String] fm_group_names
         Array[File] peakfiles
+        Array[String] peakfile_names
         File plink_bim_path
         String git_branch
     }
-
-    Int iters = length(finemapped_results) - 1
 
     command <<<
         set -ex
@@ -51,30 +50,27 @@ task peak_overlaps {
         cat ~{plink_bim_path} | awk -F '\t' -v OFS='\t' '{print $1, $4, $4, $2}' | gzip -c > bim_to_bed.bed.gz
         zcat bim_to_bed.bed.gz | head
         zcat bim_to_bed.bed.gz | sort -k1,1 -k2,2n  | gzip -c > bim_to_bed.sorted.bed.gz
-        FM_ARRAY=(~{sep=" " finemapped_results}) # Load array into bash variable
-        NAME_ARRAY=(~{sep=" " fm_group_names})
 
-        for i in $(seq 0 ~{iters}) #finemap_result in ${finemapped_results}
+        PEAK_NAME_ARRAY=(~{sep=" " peakfile_names})
+
+        for peakfile in ~{sep=" " peakfiles}
         do
-            echo ${FM_ARRAY[$i]}
-            micromamba run -n tools2 python3 /app/eqtl_annotations/get_finemap_bed.py ${FM_ARRAY[$i]} ${NAME_ARRAY[$i]}
-            for peakfile in ~{sep=" " peakfiles}
-            do
-                echo $peakfile
-                zcat $peakfile | sort -k1,1 -k2,2n | cut -f -3 > peak_file.bed
-                micromamba run -n tools2 bedtools closest -d -a bim_to_bed.sorted.bed.gz -b peak_file.bed | gzip -c > peak_dists.bed.gz
-                zcat peak_dists.bed.gz | head
-                micromamba run -n tools2 python3 /app/eqtl_annotations/combine_peaks_fm.py -p peak_dists.bed.gz -a $peakfile -f finemapped_results.tsv -g ${NAME_ARRAY[$i]}
-                cat finemapped_results.tsv | head
-            done
-            cat finemapped_results.tsv > ${NAME_ARRAY[$i]}_ATAC_CHIP_peaks_finemapped_results.tsv
+            echo $peakfile
+            # micromamba run -n tools2 python3 /app/eqtl_annotations/get_finemap_bed.py ${FM_ARRAY[$i]} ${NAME_ARRAY[$i]}
+            zcat $peakfile | sort -k1,1 -k2,2n | cut -f -3 > tmp.bed
+            # overwrite
+            cat tmp.bed | gzip -c > $peakfile
+            #micromamba run -n tools2 python3 /app/eqtl_annotations/combine_peaks_fm.py -p peak_dists.bed.gz -a $peakfile -f finemapped_results.tsv -g ${NAME_ARRAY[$i]}
+            #cat finemapped_results.tsv > ${NAME_ARRAY[$i]}_ATAC_CHIP_peaks_finemapped_results.tsv
         done
+        PEAKFILES=(~{sep=" " peakfiles})
+        micromamba run -n tools2 bedtools closest -d -a bim_to_bed.sorted.bed.gz -b $PEAKFILES -names $PEAK_NAME_ARRAY | gzip -c > peak_dists.bed.gz
+        zcat peak_dists.bed.gz | head
 
     >>>
 
     output {
-        Array[File] fm_with_peak_distance = glob("*_ATAC_CHIP_peaks_finemapped_results.tsv")
-        Array[File] all_variant_peak_stats = glob("*_peak_stats.tsv")
+        File all_variant_peak_stats = glob("peak_dists.bed.gz")
     }
 
     runtime {
