@@ -49,6 +49,7 @@ task peak_overlaps {
 
         # convert plink.bim to a bed.gz with chr, pos, pos, variant_id
         gsutil cat ${plink_bim_path} | awk -F '\t' -v OFS='\t' '{print $1, $4, $4, $2}' | gzip -c > bim_to_bed.bed.gz
+        zcat bim_to_bed.bed.gz | head
         zcat bim_to_bed.bed.gz | sort -k1,1 -k2,2n  | gzip -c > bim_to_bed.sorted.bed.gz
         FM_ARRAY=(~{sep=" " finemapped_results}) # Load array into bash variable
         NAME_ARRAY=(~{sep=" " fm_group_names})
@@ -62,7 +63,9 @@ task peak_overlaps {
                 echo $peakfile
                 zcat $peakfile | sort -k1,1 -k2,2n | cut -f -3 > peak_file.bed
                 micromamba run -n tools2 bedtools closest -d -a bim_to_bed.sorted.bed.gz -b peak_file.bed | gzip -c > peak_dists.bed.gz
+                zcat peak_dists.bed.gz | head
                 micromamba run -n tools2 python3 /app/eqtl_annotations/combine_peaks_fm.py -p peak_dists.bed.gz -a $peakfile -f finemapped_results.tsv -g ${NAME_ARRAY[$i]}
+                cat finemapped_results.tsv | head
             done
             cat finemapped_results.tsv > ${NAME_ARRAY[$i]}_ATAC_CHIP_peaks_finemapped_results.tsv
         done
