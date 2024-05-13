@@ -36,7 +36,7 @@ task peak_overlaps {
         Array[File] finemapped_results
         Array[String] fm_group_names
         Array[File] peakfiles
-        String plink_bim_path
+        File plink_bim_path
         String git_branch
     }
 
@@ -48,7 +48,7 @@ task peak_overlaps {
         micromamba -n tools2 install bioconda::bedtools -y
 
         # convert plink.bim to a bed.gz with chr, pos, pos, variant_id
-        cat ~{plink_bim_path} | awk -F '\t' -v OFS='\t' '{print $1, $4, $4, $2}' | gzip -c > bim_to_bed.bed.gz
+        cat ${plink_bim_path} | awk -F '\t' -v OFS='\t' '{print $1, $4, $4, $2}' | gzip -c > bim_to_bed.bed.gz
         zcat bim_to_bed.bed.gz | head
         zcat bim_to_bed.bed.gz | sort -k1,1 -k2,2n  | gzip -c > bim_to_bed.sorted.bed.gz
         FM_ARRAY=(~{sep=" " finemapped_results}) # Load array into bash variable
