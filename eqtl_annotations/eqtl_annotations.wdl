@@ -34,9 +34,19 @@ workflow annotate_eqtl_variants {
             git_branch=git_branch
     }
 
+    call make_gtex_annotation_plot {
+        input:
+            finemapped_annotations=merge_fm_annotations.fm_annotations,
+            fm_group_names=fm_group_names,
+            all_variant_peaks_gtex=gtex_vep_overlap.all_variant_peaks_gtex,
+            git_branch=git_branch
+    }
+
     output {
         File all_variant_peaks_gtex = gtex_vep_overlap.all_variant_peaks_gtex
         File peak_overlaps_bed = peak_overlaps.all_variant_peak_stats
+        Array[File] finemapped_annotations = merge_fm_annotations.fm_annotations
+        File gtex_annotations_plot = make_gtex_annotation_plot.gtex_annotations_plot
     }
 }
 
@@ -128,6 +138,32 @@ task merge_fm_annotations {
 
     output {
         Array[File] fm_annotations = glob("*_fm_variants_annotations.parquet")
+    }
+
+    runtime {
+        docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
+        cpu: 1
+        memory: "16GB"
+    }
+}
+
+
+task make_gtex_annotation_plot {
+    input {
+        Array[File] finemapped_annotations
+        Array[String] fm_group_names
+        File all_variant_peaks_gtex
+        String git_branch
+    }
+
+    command {
+        set -ex
+        (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
+        micromamba run -n tools2 python3 /app/eqtl_annotations/gtex_annotation_plot.py -f ${sep=' ' finemapped_annotations} -g ${sep=' ' fm_group_names} -v ${all_variant_peaks_gtex}
+    }
+
+    output {
+        File gtex_annotations_plot = "gtex_annot_enrich.png"
     }
 
     runtime {
