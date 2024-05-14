@@ -67,7 +67,7 @@ task peak_overlaps {
     >>>
 
     output {
-        File all_variant_peak_stats = glob("peak_dists.bed.gz")
+        File all_variant_peak_stats = "peak_dists.bed.gz"
     }
 
     runtime {
