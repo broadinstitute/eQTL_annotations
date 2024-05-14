@@ -61,7 +61,7 @@ task peak_overlaps {
             #micromamba run -n tools2 python3 /app/eqtl_annotations/combine_peaks_fm.py -p peak_dists.bed.gz -a $peakfile -f finemapped_results.tsv -g ${NAME_ARRAY[$i]}
             #cat finemapped_results.tsv > ${NAME_ARRAY[$i]}_ATAC_CHIP_peaks_finemapped_results.tsv
         done
-        micromamba run -n tools2 bedtools closest -d -a bim_to_bed.sorted.bed.gz -b ~{sep=" " peakfiles} -names ~{sep=" " peakfile_names} | gzip -c > peak_dists.bed.gz
+        micromamba run -n tools2 bedtools closest -d -a bim_to_bed.sorted.bed.gz -b ~{sep=" " peakfiles} -names ~{sep=" " peakfile_names} -t first | gzip -c > peak_dists.bed.gz
         zcat peak_dists.bed.gz | head
 
     >>>
