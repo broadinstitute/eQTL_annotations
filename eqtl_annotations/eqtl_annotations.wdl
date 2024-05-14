@@ -26,6 +26,14 @@ workflow annotate_eqtl_variants {
             git_branch=git_branch
     }
 
+    call merge_fm_annotations {
+        input:
+            finemapped_results=finemapped_results,
+            fm_group_names=fm_group_names,
+            all_variant_peaks_gtex=gtex_vep_overlap.all_variant_peaks_gtex,
+            git_branch=git_branch
+    }
+
     output {
         File all_variant_peaks_gtex = gtex_vep_overlap.all_variant_peaks_gtex
         File peak_overlaps_bed = peak_overlaps.all_variant_peak_stats
@@ -101,5 +109,30 @@ task gtex_vep_overlap {
         memory: "32GB"
         preemptible: 1
         disks: "local-disk ~{disk_size} HDD"
+    }
+}
+
+task merge_fm_annotations {
+    input {
+        Array[File] finemapped_results
+        Array[String] fm_group_names
+        File all_variant_peaks_gtex
+        String git_branch
+    }
+
+    command {
+        set -ex
+        (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
+        micromamba run -n tools2 python3 /app/eqtl_annotations/merge_fm_annotations.py -f ${sep=' ' finemapped_results} -n ${sep=' ' fm_group_names} -v ${all_variant_peaks_gtex}
+    }
+
+    output {
+        Array[File] fm_annotations = glob("*_fm_variants_annotations.parquet")
+    }
+
+    runtime {
+        docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
+        cpu: 1
+        memory: "16GB"
     }
 }
