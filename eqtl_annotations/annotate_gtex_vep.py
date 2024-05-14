@@ -3,24 +3,34 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", dest="finemapped_results", nargs='+', default=[],
-                        help="Array of finemap results with ATAC and CHIP peaks already added, across all group names.")
-    parser.add_argument("-n", dest="names", nargs='+', default=[])
+    parser.add_argument("-p", dest="peak_dist_bed", type=str, required=True)
     parser.add_argument('-g', dest='gtex_vep', help='gtex vep overlap file in tsv.gz form', type=str, required=True)
     args = parser.parse_args()
+
+    print("Reading in all variant peak overlap data")
+    all_peak_overlaps = pd.read_table(args.peak_dist_bed, header=None,
+                                  names=f"chr pos _pos variant_id library _chr peak_start peak_end peak_dist".split(), index_col=[0, 1])
+
+    grp = all_peak_overlaps.groupby('library')
+    dfs = [grp.get_group(g) for g in all_peak_overlaps.groupby('library').groups]
+
+    peak_dfs = []
+    for df in dfs:
+        lib_name = df.library.unique()[0]
+        df[f'{lib_name}_peak_dist'] = df.peak_dist
+        peak_dfs.append(df[['variant_id', f'{lib_name}_peak_dist']].reset_index().set_index(['variant_id', 'chr', 'pos']))
+    all_var_peak_df = pd.concat(peak_dfs, axis=1)
 
     print("Reading in gtex vep.")
     gtex_vep = pd.read_table(args.gtex_vep, index_col=0)
     gtex_vep.index = gtex_vep.index.str.replace('_b38', '').str.replace('_', ':')
 
-    print("Annotating.")
-    for finemapped_file, group_name in zip(args.finemapped_results, args.names):
-        finemapped_df = pd.read_table(finemapped_file)
-        gtex_overlap = gtex_vep[gtex_vep.index.isin(finemapped_df.set_index('variant_id').index)]
-        gtex_overlap = gtex_overlap.reset_index().rename(columns={'SNP':'variant_id'})
-        # merge cur data with gtex vep data
-        finemapped_df = finemapped_df.merge(gtex_overlap, on='variant_id', how='outer')
-        finemapped_df.to_csv(f'{group_name}_finemap_CHIP_ATAC_GTEx_overlap.tsv', sep='\t', header=True, index=False)
+    print("Annotating all variants with gtex data.")
+    gtex_overlap = gtex_vep[gtex_vep.index.isin(all_var_peak_df.reset_index().set_index('variant_id').index)]
+    gtex_overlap = gtex_overlap.reset_index().rename(columns={'SNP':'variant_id'})
+    # merge cur data with gtex vep data
+    all_var_peak_gtex_df = all_var_peak_df.merge(gtex_overlap, on='variant_id', how='outer')
+    all_var_peak_gtex_df.to_parquet(f'all_variant_CHIP_ATAC_GTEx_overlap.parquet')
 
 if __name__ == '__main__':
     main()

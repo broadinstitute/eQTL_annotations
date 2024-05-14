@@ -19,17 +19,16 @@ workflow annotate_eqtl_variants {
             git_branch=git_branch
     }
 
-    # call gtex_vep_overlap {
-    #     input:
-    #         finemapped_results=finemapped_results,
-    #         fm_group_names=fm_group_names,
-    #         gtex_vep=gtex_vep,
-    #         git_branch=git_branch
-    # }
+    call gtex_vep_overlap {
+        input:
+            all_variant_peak_stats=peak_overlaps.all_variant_peak_stats,
+            gtex_vep=gtex_vep,
+            git_branch=git_branch
+    }
 
     output {
-        #Array[File] fm_annotations = gtex_vep_overlap.fm_peaks_gtex
-        File all_variant_peak_stats = peak_overlaps.all_variant_peak_stats
+        File all_variant_peaks_gtex = gtex_vep_overlap.all_variant_peaks_gtex
+        File peak_overlaps_bed = peak_overlaps.all_variant_peak_stats
     }
 }
 
@@ -79,22 +78,21 @@ task peak_overlaps {
 
 task gtex_vep_overlap {
     input {
-        Array[String] finemapped_results
-        Array[String] fm_group_names
+        File all_variant_peak_stats
         File gtex_vep
         String git_branch
     }
 
-    Int disk_size = 1 + floor(size(gtex_vep, "GB"))
+    Int disk_size = 10 + floor(size(gtex_vep, "GB"))
 
     command {
     set -ex
     (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
-    micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -f ${sep=' ' finemapped_results} -n ${sep=' ' fm_group_names} -g ${gtex_vep}
+    micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -p ${all_variant_peak_stats} -g ${gtex_vep}
     }
 
     output {
-        Array[File] fm_peaks_gtex = glob("*_finemap_CHIP_ATAC_GTEx_overlap.tsv")
+        File all_variant_peaks_gtex = "all_variant_CHIP_ATAC_GTEx_overlap.parquet"
     }
 
     runtime {
