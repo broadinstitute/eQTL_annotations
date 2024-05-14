@@ -97,8 +97,8 @@ task gtex_vep_overlap {
 
     runtime {
         docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
-        cpu: 1
-        memory: "16GB"
+        cpu: 2
+        memory: "32GB"
         preemptible: 1
         disks: "local-disk ~{disk_size} HDD"
     }
