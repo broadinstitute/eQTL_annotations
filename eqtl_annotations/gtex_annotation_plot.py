@@ -16,7 +16,7 @@ def main():
 
     labels = ['Enhancer', 'Promoter', 'CTCF binding site', 'TF binding site', "3' UTR", "5' UTR", "Intron", "Nonsynonymous", "Synonymous"]
 
-    all_variant_annots = pd.read_parquet('all_variant_annots.parquet')
+    all_variant_annots = pd.read_parquet(args.variant_annotations)
 
     finemapped_dfs = args.finemapped_annotations
     group_names = args.group_names
@@ -60,7 +60,7 @@ def main():
     ax1.set_xlabel('Prop. of Variants', fontsize = 30)
 
     fig.tight_layout()
-    fig.savefig(f'gtex_annot_enrich.png', dpi=300)
+    fig.savefig('gtex_annot_enrich.png', dpi=300)
 
 
 if __name__ == '__main__':
