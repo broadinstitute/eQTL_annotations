@@ -110,7 +110,7 @@ task gtex_vep_overlap {
         String git_branch
     }
 
-    Int disk_size = 10 + floor(size(gtex_vep, "GB"))
+    Int disk_size = 50 + floor(size(gtex_vep, "GB"))
 
     command {
     set -ex
@@ -124,8 +124,8 @@ task gtex_vep_overlap {
 
     runtime {
         docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
-        cpu: 2
-        memory: "32GB"
+        cpu: 4
+        memory: "128GB"
         preemptible: 1
         disks: "local-disk ~{disk_size} HDD"
     }
