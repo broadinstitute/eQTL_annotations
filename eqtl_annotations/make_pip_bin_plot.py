@@ -58,7 +58,8 @@ def main():
         sns.barplot(FE_melt_new, x='index', y='value', hue='variable')
         annotation_labels = [annotation_map[x] if x in annotation_map.keys() else x.replace('_', ' ') for x in annotations]
         ax.set_xticklabels(annotation_labels, rotation = 45, ha="right");
-        ax.set_ylabel('Fold Enrichment');
+        ax.set_ylabel('Fold Enrichment')
+        ax.set_xlabel('')
         ax.legend(title='')
         ax.set_title(group_name.replace('_', ' '))
         fig.tight_layout()
