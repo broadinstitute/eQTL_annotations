@@ -61,7 +61,7 @@ def main():
         ax.set_ylabel('Fold Enrichment');
         ax.legend(title='')
         ax.set_title(group_name.replace('_', ' '))
-
+        fig.tight_layout()
         fig.savefig(f'{group_name}_annotation_by_pip.png', dpi=300)
 
 
