@@ -173,6 +173,7 @@ task make_gtex_annotation_plot {
 
     output {
         File gtex_annotations_plot = "gtex_annot_enrich.png"
+        File enrichment_means_by_group = "raw_mean_by_group_gtex_plot.tsv"
     }
 
     runtime {
@@ -198,6 +199,7 @@ task make_pip_bin_plot {
 
     output {
         Array[File] pip_bin_plots = glob("*_annotation_by_pip.png")
+        Array[File] mean_array_by_pip = glob("*_mean_array_by_pip.tsv")
     }
 
     runtime {

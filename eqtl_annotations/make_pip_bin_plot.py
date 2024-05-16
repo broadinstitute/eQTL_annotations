@@ -12,8 +12,8 @@ def main():
     parser.add_argument("-v", dest="variant_annotations", help='parquet with all variant annotations', type=str, required=True)
     args = parser.parse_args()
 
-    finemapped_dfs = args.finemapped_annotations # ['ips_D0_fm_variants_annotations.parquet', 'hep_D2_fm_variants_annotations.parquet']
-    group_names = args.group_names #['ips_D0', 'hep_D2']
+    finemapped_dfs = args.finemapped_annotations
+    group_names = args.group_names
     annotation_map = {'ATAC_peak_dist':'ATAC peak dist', 'CTCF_peak_dist':'CTCF peak dist',
                     'enhancer_d':'Enhancer', 'promoter_d':'Promoter', 'CTCF_binding_site_d':'CTCF binding site', 'TF_binding_site_d':'TF binding site',
                     '3_prime_UTR_variant_d':"3' UTR", '5_prime_UTR_variant_d':"5' UTR", 'intron_variant_d':"Intron",
@@ -35,8 +35,18 @@ def main():
     for group_name in group_names:
         fm_annot_df = fm_dict[group_name].copy()
 
+        # get bin info
         fm_annot_df['bins'] = pd.cut(fm_annot_df.pip, bins=bins, labels=labels, right=True, include_lowest=True)
+        # drop splice annotations
         fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('splice')]
+        # annotate peaks categorically as well
+        peaks_500 = fm_annot_df.loc[:, fm_annot_df.columns.str.contains('peak_dist')] < 500
+        in_a_peak = fm_annot_df.loc[:, fm_annot_df.columns.str.contains('peak_dist')] == 0
+        in_a_peak.columns = in_a_peak.columns.str.strip('peak_dist') + '_in_a_peak'
+        peaks_500.columns = peaks_500.columns.str.strip('peak_dist') + '_500bp_from_peak'
+        # add that info
+        fm_annot_df = pd.concat([fm_annot_df, in_a_peak, peaks_500], axis=1)
+        # all annotations are included
         annotations = fm_annot_df.loc[:, ~fm_annot_df.columns.isin(non_annotations)].columns
         mean_arr = pd.DataFrame(0.0, index=annotations, columns=labels)
 
@@ -48,7 +58,7 @@ def main():
         norm = mean_arr['PIP<0.01'].values
         FE = (mean_arr.T / norm).T
         annotations = FE.index.values
-
+        mean_arr.to_csv(f'{group_name}_mean_array_by_pip.tsv', sep='\t', header=True, index=False)
         FE_melt_new = FE.reset_index().melt(id_vars='index')
 
         fig, ax = plt.subplots(figsize=(15,4))
