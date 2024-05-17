@@ -82,7 +82,7 @@ def main():
     ax.set_xlabel('$log_{2}$(Fold Enrichment)        ', fontsize = 30)
     for loc in np.arange(-1,5):
         ax.axvline(x=loc, c='k', ls='--', lw=.35, zorder=0, alpha=0.5)
-
+    ax.axvline(0, c='k',  ls='--', lw=.6, zorder=0)
     # plot the proportion of variants
     bar_height = 0.1
     for i, group_name in enumerate(group_names):
@@ -90,6 +90,7 @@ def main():
         ax1.barh(np.arange(len(annotations))+group_shifts[i], mean_arr.loc[:,group_name], label=legend_label, color=colors[i], height = bar_height)
     ax1.legend(bbox_to_anchor=(1,1), loc="upper left", fontsize=20)
     ax1.set_xlabel('Prop. of Variants', fontsize = 30)
+    ax1.set_xlim(0, .2)
     for loc in np.arange(0,1,.1):
         ax1.axvline(x=loc, c='k', ls='--', lw=.35, zorder=0, alpha=0.5)
 

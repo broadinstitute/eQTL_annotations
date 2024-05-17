@@ -1,5 +1,7 @@
 version 1.0
 
+import "https://api.firecloud.org/ga4gh/v1/tools/landerlab:copy_to_google_bucket/versions/3/plain-WDL/descriptor" as copyfiles
+
 workflow annotate_eqtl_variants {
     input {
         Array[File] finemapped_results
@@ -8,6 +10,7 @@ workflow annotate_eqtl_variants {
         Array[String] peakfile_names
         File plink_bim_path
         File gtex_vep
+        String dest_dir
         String git_branch = "main"
     }
 
@@ -48,6 +51,14 @@ workflow annotate_eqtl_variants {
             fm_group_names=fm_group_names,
             all_variant_peaks_gtex=gtex_vep_overlap.all_variant_peaks_gtex,
             git_branch=git_branch
+    }
+
+    Array[File] all_files = flatten([gtex_vep_overlap.all_variant_peaks_gtex, peak_overlaps.all_variant_peak_stats, merge_fm_annotations.fm_annotations, make_gtex_annotation_plot.gtex_annotations_plot, make_pip_bin_plot.pip_bin_plots])
+
+    call copyfiles.copyFile {
+        input:
+        files_2_copy = all_files,
+        output_gs_dir = dest_dir
     }
 
     output {
