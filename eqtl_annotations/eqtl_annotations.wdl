@@ -53,7 +53,10 @@ workflow annotate_eqtl_variants {
             git_branch=git_branch
     }
 
-    Array[File] all_files = flatten([gtex_vep_overlap.all_variant_peaks_gtex, peak_overlaps.all_variant_peak_stats, merge_fm_annotations.fm_annotations, make_gtex_annotation_plot.gtex_annotations_plot, make_pip_bin_plot.pip_bin_plots])
+    Array[File] all_var_results = [gtex_vep_overlap.all_variant_peaks_gtex]
+    Array[File] peak_res_only = [peak_overlaps.all_variant_peak_stats]
+    Array[File] gtex_annotation_plot = [make_gtex_annotation_plot.gtex_annotations_plot]
+    Array[File] all_files = flatten([all_var_results, peak_res_only, merge_fm_annotations.fm_annotations, gtex_annotation_plot, make_pip_bin_plot.pip_bin_plots])
 
     call copyfiles.copyFile {
         input:
