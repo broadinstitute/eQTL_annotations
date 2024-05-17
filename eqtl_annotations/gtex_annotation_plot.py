@@ -33,15 +33,16 @@ def main():
     fm_dict = {}
     for fm_df_str, group_name in zip(finemapped_dfs, group_names):
         fm_annot_df = pd.read_parquet(fm_df_str)
-        # dont include splice
-        fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('splice')]
+        # dont include splice or frameshift
+        fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('splice|frameshift')]
         # annotate peaks categorically as well
         peaks_500 = fm_annot_df.loc[:, fm_annot_df.columns.str.contains('peak_dist')] < 500
         in_a_peak = fm_annot_df.loc[:, fm_annot_df.columns.str.contains('peak_dist')] == 0
         in_a_peak.columns = in_a_peak.columns.str.strip('peak_dist') + '_in_a_peak'
         peaks_500.columns = peaks_500.columns.str.strip('peak_dist') + '_500bp_from_peak'
         # add that info
-        fm_annot_df = pd.concat([fm_annot_df, in_a_peak, peaks_500], axis=1)
+        # drop 500 bp info for now
+        fm_annot_df = pd.concat([fm_annot_df, in_a_peak], axis=1)
         # drop peak dist info - dont want it
         fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('peak_dist')]
         fm_dict[group_name] = fm_annot_df
@@ -57,7 +58,7 @@ def main():
                 mean_arr.at[annotation, group_name] = fm_annot_df[annotation].mean()
                 mean_arr.at[annotation, 'background_snps'] = all_variant_annots[annotation].mean()
 
-    mean_arr.to_csv('raw_mean_by_group_gtex_plot.tsv', sep='\t', header=True, index=False)
+    mean_arr.to_csv('raw_mean_by_group_gtex_plot.tsv', sep='\t', header=True, index=True)
     log2FE_arr = mean_arr.iloc[:,:-1] / mean_arr.iloc[:,-1].values[:,None]
     log2FE_arr = np.log2(log2FE_arr)
 
@@ -79,7 +80,8 @@ def main():
     ax.set_yticks(range(len(annotations)))
     ax.set_yticklabels(annotation_labels)
     ax.set_xlabel('$log_{2}$(Fold Enrichment)        ', fontsize = 30)
-    ax.axvline(x=0, c='k', ls='--', lw=.5)
+    for loc in np.arange(-1,5):
+        ax.axvline(x=loc, c='k', ls='--', lw=.35, zorder=0, alpha=0.5)
 
     # plot the proportion of variants
     bar_height = 0.1
@@ -88,6 +90,8 @@ def main():
         ax1.barh(np.arange(len(annotations))+group_shifts[i], mean_arr.loc[:,group_name], label=legend_label, color=colors[i], height = bar_height)
     ax1.legend(bbox_to_anchor=(1,1), loc="upper left", fontsize=20)
     ax1.set_xlabel('Prop. of Variants', fontsize = 30)
+    for loc in np.arange(0,1,.1):
+        ax1.axvline(x=loc, c='k', ls='--', lw=.35, zorder=0, alpha=0.5)
 
     fig.tight_layout()
     fig.savefig('gtex_annot_enrich.png', dpi=300)
