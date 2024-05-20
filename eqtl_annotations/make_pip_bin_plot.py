@@ -56,7 +56,8 @@ def main():
             for day in "D0 D2 D4 D7".split():
                 if not fm_annot_df.columns.str.contains(f'ATAC_{day}').any():
                     continue
-                only_in_atac = ((fm_annot_df.loc[:, fm_annot_df.columns.str.contains('ATAC_D')].sum(axis=1) == 1) & (fm_annot_df[f'ATAC_{day}_in_a_peak'])).rename(f'only_ATAC_{day}')
+                only_in_atac = ((fm_annot_df.loc[:, fm_annot_df.columns.str.startswith('ATAC_D') &
+                                                 fm_annot_df.columns.str.endswith('in_a_peak')].sum(axis=1) == 1) & (fm_annot_df[f'ATAC_{day}_in_a_peak'])).rename(f'only_ATAC_{day}')
                 fm_annot_df = pd.concat([fm_annot_df, only_in_atac],
                     axis=1)
 
@@ -64,7 +65,8 @@ def main():
             for day in "D2 D4 D7".split():
                 if not fm_annot_df.columns.str.contains(f'CTCF_{day}').any():
                     continue
-                only_in_ctcf = ((fm_annot_df.loc[:, fm_annot_df.columns.str.contains('CTCF_D')].sum(axis=1) == 1) & (fm_annot_df[f'CTCF_{day}_in_a_peak'])).rename(f'only_CTCF_{day}')
+                only_in_ctcf = ((fm_annot_df.loc[:, fm_annot_df.columns.str.contains('CTCF_D') &
+                                                 fm_annot_df.columns.str.endswith('in_a_peak')].sum(axis=1) == 1) & (fm_annot_df[f'CTCF_{day}_in_a_peak'])).rename(f'only_CTCF_{day}')
                 fm_annot_df = pd.concat([fm_annot_df, only_in_ctcf],
                     axis=1)
 
