@@ -1,4 +1,4 @@
-version 1.0
+version development
 
 import "https://api.firecloud.org/ga4gh/v1/tools/landerlab:copy_to_google_bucket/versions/3/plain-WDL/descriptor" as copyfiles
 
@@ -160,7 +160,7 @@ task merge_fm_annotations {
     }
 
     output {
-        Array[File] fm_annotations = glob("*_fm_variants_annotations.parquet")
+        Array[File] fm_annotations = suffix("_fm_variants_annotations.parquet", fm_group_names)
     }
 
     runtime {
@@ -212,8 +212,8 @@ task make_pip_bin_plot {
     }
 
     output {
-        Array[File] pip_bin_plots = glob("*_annotation_by_pip.png")
-        Array[File] mean_array_by_pip = glob("*_mean_array_by_pip.tsv")
+        Array[File] pip_bin_plots = suffix("_annotation_by_pip.png", fm_group_names)
+        Array[File] mean_array_by_pip = suffix("_mean_array_by_pip.tsv", fm_group_names)
     }
 
     runtime {
