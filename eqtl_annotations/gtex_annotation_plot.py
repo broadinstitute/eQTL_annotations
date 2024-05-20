@@ -34,7 +34,7 @@ def main():
     for fm_df_str, group_name in zip(finemapped_dfs, group_names):
         fm_annot_df = pd.read_parquet(fm_df_str)
         # dont include splice or frameshift
-        fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('splice|frameshift')]
+        fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('splice|frameshift|CTCF_binding|open_chromatin')]
         # annotate peaks categorically as well
         peaks_500 = fm_annot_df.loc[:, fm_annot_df.columns.str.contains('peak_dist')] < 500
         in_a_peak = fm_annot_df.loc[:, fm_annot_df.columns.str.contains('peak_dist')] == 0
@@ -45,6 +45,24 @@ def main():
         fm_annot_df = pd.concat([fm_annot_df, in_a_peak], axis=1)
         # drop peak dist info - dont want it
         fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('peak_dist')]
+
+        # annotate day specific atac/ctcf info
+        if fm_annot_df.columns.str.contains('ATAC_D').any():
+            for day in "D0 D2 D4 D7".split():
+                if not fm_annot_df.columns.str.contains(f'ATAC_{day}').any():
+                    continue
+                only_in_atac = ((fm_annot_df.loc[:, fm_annot_df.columns.str.contains('ATAC_D')].sum(axis=1) == 1) & (fm_annot_df[f'ATAC_{day}_in_a_peak'])).rename(f'only_ATAC_{day}')
+                fm_annot_df = pd.concat([fm_annot_df, only_in_atac],
+                    axis=1)
+
+        if fm_annot_df.columns.str.contains('CTCF_D').any():
+            for day in "D2 D4 D7".split():
+                if not fm_annot_df.columns.str.contains(f'CTCF_{day}').any():
+                    continue
+                only_in_ctcf = ((fm_annot_df.loc[:, fm_annot_df.columns.str.contains('CTCF_D')].sum(axis=1) == 1) & (fm_annot_df[f'CTCF_{day}_in_a_peak'])).rename(f'only_CTCF_{day}')
+                fm_annot_df = pd.concat([fm_annot_df, only_in_ctcf],
+                    axis=1)
+
         fm_dict[group_name] = fm_annot_df
 
     # all annotations are included

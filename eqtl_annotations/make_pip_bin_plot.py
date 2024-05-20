@@ -48,6 +48,26 @@ def main():
         # add that info
         # not doing peaks 500bp anymore.
         fm_annot_df = pd.concat([fm_annot_df, in_a_peak], axis=1)
+        # drop peak dist info - dont want it
+        fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('peak_dist')]
+
+        # annotate day specific atac/ctcf info
+        if fm_annot_df.columns.str.contains('ATAC_D').any():
+            for day in "D0 D2 D4 D7".split():
+                if not fm_annot_df.columns.str.contains(f'ATAC_{day}').any():
+                    continue
+                only_in_atac = ((fm_annot_df.loc[:, fm_annot_df.columns.str.contains('ATAC_D')].sum(axis=1) == 1) & (fm_annot_df[f'ATAC_{day}_in_a_peak'])).rename(f'only_ATAC_{day}')
+                fm_annot_df = pd.concat([fm_annot_df, only_in_atac],
+                    axis=1)
+
+        if fm_annot_df.columns.str.contains('CTCF_D').any():
+            for day in "D2 D4 D7".split():
+                if not fm_annot_df.columns.str.contains(f'CTCF_{day}').any():
+                    continue
+                only_in_ctcf = ((fm_annot_df.loc[:, fm_annot_df.columns.str.contains('CTCF_D')].sum(axis=1) == 1) & (fm_annot_df[f'CTCF_{day}_in_a_peak'])).rename(f'only_CTCF_{day}')
+                fm_annot_df = pd.concat([fm_annot_df, only_in_ctcf],
+                    axis=1)
+
         # all annotations are included
         annotations = fm_annot_df.loc[:, ~fm_annot_df.columns.isin(non_annotations)].columns
         mean_arr = pd.DataFrame(0.0, index=annotations, columns=labels)
