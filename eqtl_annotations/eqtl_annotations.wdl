@@ -160,7 +160,7 @@ task merge_fm_annotations {
     }
 
     output {
-        Array[File] fm_annotations = glob("*/*_fm_variants_annotations.parquet")
+        Array[File] fm_annotations = glob("*_fm_variants_annotations.parquet")
     }
 
     runtime {
@@ -182,7 +182,7 @@ task make_gtex_annotation_plot {
     command {
         set -ex
         (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
-        micromamba run -n tools2 python3 /app/eqtl_annotations/gtex_annotation_plot.py -f ${sep=' ' finemapped_annotations} -v ${all_variant_peaks_gtex}
+        micromamba run -n tools2 python3 /app/eqtl_annotations/gtex_annotation_plot.py -f ${sep=' ' finemapped_annotations} -g ${sep=' ' fm_group_names} -v ${all_variant_peaks_gtex}
     }
 
     output {
@@ -208,7 +208,7 @@ task make_pip_bin_plot {
     command {
         set -ex
         (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
-        micromamba run -n tools2 python3 /app/eqtl_annotations/make_pip_bin_plot.py -f ${sep=' ' finemapped_annotations} -v ${all_variant_peaks_gtex}
+        micromamba run -n tools2 python3 /app/eqtl_annotations/make_pip_bin_plot.py -f ${sep=' ' finemapped_annotations}  -g ${sep=' ' fm_group_names} -v ${all_variant_peaks_gtex}
     }
 
     output {

@@ -2,11 +2,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import os.path
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", dest="finemapped_annotations", nargs='+', default=[],
                         help="Array of finemap results with annotations already added, across all group names.")
+    parser.add_argument("-g", dest="group_names", nargs='+', default=[])
     parser.add_argument("-v", dest="variant_annotations", help='parquet with all variant annotations', type=str, required=True)
     args = parser.parse_args()
 
@@ -40,13 +42,12 @@ def main():
     all_variant_annots = pd.concat([all_variant_annots, only_one_peak_df], axis=1)
 
     finemapped_dfs = args.finemapped_annotations
+    group_names = args.group_names
 
     fm_dict = {}
-    group_names = []
-    for input_file in finemapped_dfs:
-        group_name, _ = input_file.split('/')[-2:]
-        group_names.append(group_name)
-        fm_annot_df = pd.read_parquet(input_file)
+    for group_name in group_names:
+        fm_df_str = [x for x in finemapped_dfs if os.path.basename(x) == f'{group_name}_fm_variants_annotations.parquet']
+        fm_annot_df = pd.read_parquet(fm_df_str)
         # dont include splice or frameshift
         fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('splice|frameshift|CTCF_binding|open_chromatin')]
         # annotate peaks categorically as well

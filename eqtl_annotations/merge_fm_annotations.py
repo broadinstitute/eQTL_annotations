@@ -26,8 +26,7 @@ def main():
         finemapped_df['variant_id'] = finemapped_df.variant_id.str.replace('_', ':')
 
         merged = finemapped_df.merge(all_var_annotations, on='variant_id', how='left')
-        os.mkdir(group_name)
-        merged.to_parquet(f'{group_name}/{group_name}_fm_variants_annotations.parquet')
+        merged.to_parquet(f'{group_name}_fm_variants_annotations.parquet')
 
 if __name__ == '__main__':
     main()
