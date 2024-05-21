@@ -9,12 +9,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", dest="finemapped_annotations", nargs='+', default=[],
                         help="Array of finemap results with annotations already added, across all group names.")
-    parser.add_argument("-g", dest="group_names", nargs='+', default=[])
     parser.add_argument("-v", dest="variant_annotations", help='parquet with all variant annotations', type=str, required=True)
     args = parser.parse_args()
 
     finemapped_dfs = args.finemapped_annotations
-    group_names = args.group_names
     annotation_map = {'ATAC_peak_dist':'ATAC peak dist', 'CTCF_peak_dist':'CTCF peak dist',
                     'enhancer_d':'Enhancer', 'promoter_d':'Promoter', 'CTCF_binding_site_d':'CTCF binding site', 'TF_binding_site_d':'TF binding site',
                     '3_prime_UTR_variant_d':"3' UTR", '5_prime_UTR_variant_d':"5' UTR", 'intron_variant_d':"Intron",
@@ -26,8 +24,11 @@ def main():
 
 
     fm_dict = {}
-    for fm_df_str, group_name in zip(finemapped_dfs, group_names):
-        fm_df = pd.read_parquet(fm_df_str)
+    group_names = []
+    for input_file in finemapped_dfs:
+        group_name, _ = input_file.split('/')[-2:]
+        group_names.append(group_name)
+        fm_df = pd.read_parquet(input_file)
         fm_dict[group_name] = fm_df
 
     bins = [0, 0.01, 0.1, 0.5, 0.9, 1]
