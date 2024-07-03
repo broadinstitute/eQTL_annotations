@@ -179,8 +179,8 @@ task merge_fm_annotations {
 
     runtime {
         docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
-        cpu: 1
-        memory: "16GB"
+        cpu: 4
+        memory: "32GB"
     }
 }
 
