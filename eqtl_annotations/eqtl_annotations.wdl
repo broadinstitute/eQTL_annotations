@@ -8,6 +8,7 @@ workflow annotate_eqtl_variants {
         Array[String] fm_group_names
         Array[File] peakfiles
         Array[String] peakfile_names
+        File ABC_peakfile
         File plink_bim_path
         File gtex_vep
         String dest_dir
@@ -19,12 +20,14 @@ workflow annotate_eqtl_variants {
             peakfiles=peakfiles,
             peakfile_names=peakfile_names,
             plink_bim_path=plink_bim_path,
+            ABC_peakfile=ABC_peakfile,
             git_branch=git_branch
     }
 
     call gtex_vep_overlap {
         input:
             all_variant_peak_stats=peak_overlaps.all_variant_peak_stats,
+            abc_variant_peak_stats=peak_overlaps.abc_variant_peak_stats,
             gtex_vep=gtex_vep,
             git_branch=git_branch
     }
@@ -77,6 +80,7 @@ task peak_overlaps {
     input {
         Array[File] peakfiles
         Array[String] peakfile_names
+        File ABC_peakfile
         File plink_bim_path
         String git_branch
     }
@@ -104,10 +108,19 @@ task peak_overlaps {
         micromamba run -n tools2 bedtools closest -d -a bim_to_bed.sorted.bed.gz -b ~{sep=" " peakfiles} -names ~{sep=" " peakfile_names} -t first | gzip -c > peak_dists.bed.gz
         zcat peak_dists.bed.gz | head
 
+        echo ~{ABC_peakfile}
+        # include genes
+        zcat ~{ABC_peakfile} | sort -k1,1 -k2,2n | cut -f -3,8 > tmp.bed
+        cat tmp.bed | gzip -c > ABC_peakfile.bed.gz
+        # run bedtools closets with -t all for abc
+        micromamba run -n tools2 bedtools closest -d -a bim_to_bed.sorted.bed.gz -b ABC_peakfile.bed.gz -t all | gzip -c > ABC_peak_dists.bed.gz
+        zcat ABC_peak_dists.bed.gz | head
+
     >>>
 
     output {
         File all_variant_peak_stats = "peak_dists.bed.gz"
+        File abc_variant_peak_stats = "ABC_peak_dists.bed.gz"
     }
 
     runtime {
@@ -120,6 +133,7 @@ task peak_overlaps {
 task gtex_vep_overlap {
     input {
         File all_variant_peak_stats
+        File abc_variant_peak_stats
         File gtex_vep
         String git_branch
     }
@@ -129,7 +143,7 @@ task gtex_vep_overlap {
     command {
     set -ex
     (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
-    micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -p ${all_variant_peak_stats} -g ${gtex_vep}
+    micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -p ${all_variant_peak_stats} -a ${abc_variant_peak_stats} -g ${gtex_vep}
     }
 
     output {
