@@ -206,7 +206,7 @@ task make_gtex_annotation_plot {
 
     runtime {
         docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
-        cpu: 1
+        cpu: 2
         memory: "16GB"
     }
 }
