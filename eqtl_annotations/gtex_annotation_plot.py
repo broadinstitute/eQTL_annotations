@@ -21,6 +21,7 @@ def main():
                         'non_coding_transcript_exon_variant_d':'Non-coding transcript exon variant'}
     non_annotations = ['phenotype_id', 'variant_id', 'pip', 'af', 'cs_id', 'start_distance', 'ma_samples', 'ma_count', 'pval_nominal', 'slope', 'slope_se','bins']
 
+    print('Reading in all variant annotations & adding in peak info.')
     all_variant_annots = pd.read_parquet(args.variant_annotations)
     all_var_500 = all_variant_annots.loc[:, all_variant_annots.columns.str.contains('peak_dist')] < 500
     all_var_in_a_peak = all_variant_annots.loc[:, all_variant_annots.columns.str.contains('peak_dist')] == 0
@@ -44,6 +45,7 @@ def main():
     finemapped_dfs = args.finemapped_annotations
     group_names = args.group_names
 
+    print('Reading in & adding additional info for each fm file.')
     fm_dict = {}
     for group_name in group_names:
         fm_df_str = [x for x in finemapped_dfs if os.path.basename(x) == f'{group_name}_fm_variants_annotations.parquet']
@@ -85,6 +87,7 @@ def main():
     # all annotations are included
     annotations = fm_annot_df.loc[:, ~fm_annot_df.columns.isin(non_annotations)].columns
 
+    print('Getting means in fm data compared to background (all variants).')
     # now annotate mean of each day compared to backgrounds
     mean_arr = pd.DataFrame(0.0, index=annotations, columns=np.hstack((group_names, 'background_snps')))
     for group_name in group_names:
@@ -97,6 +100,7 @@ def main():
     log2FE_arr = mean_arr.iloc[:,:-1] / mean_arr.iloc[:,-1].values[:,None]
     log2FE_arr = np.log2(log2FE_arr)
 
+    print('Plotting.')
     # plot enrichment and prop. variants plot
     fig, [ax, ax1] = plt.subplots(1,2,figsize=(16, len(annotations)), sharey=True)
     colors = 'k #FFD39B #BCEE68 #556B2E #FF6A6A #CD5555 #8B393A'.split()
@@ -131,6 +135,7 @@ def main():
 
     fig.tight_layout()
     fig.savefig('gtex_annot_enrich.png', dpi=300)
+    print('Done.')
 
 
 if __name__ == '__main__':

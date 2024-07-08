@@ -25,7 +25,7 @@ def main():
                     'non_coding_transcript_exon_variant_d':'Non-coding transcript exon variant'}
     non_annotations = ['phenotype_id', 'variant_id', 'pip', 'af', 'cs_id', 'start_distance', 'ma_samples', 'ma_count', 'pval_nominal', 'slope', 'slope_se','bins']
 
-
+    print('Reading in fm data.')
     fm_dict = {}
     for group_name in group_names:
         fm_df_str = [x for x in finemapped_dfs if os.path.basename(x) == f'{group_name}_fm_variants_annotations.parquet']
@@ -35,6 +35,7 @@ def main():
     bins = [0, 0.01, 0.1, 0.5, 0.9, 1]
     labels = ['PIP<0.01' ,'0.01<PIP<0.1','0.1<PIP<0.5', '0.5<PIP<0.9', '0.9<PIP']
 
+    print('Adding additional info to each day, getting summary info, and plotting.')
     for group_name in group_names:
         fm_annot_df = fm_dict[group_name].copy()
 
@@ -105,6 +106,7 @@ def main():
 
         fig.tight_layout()
         fig.savefig(f'{group_name}_annotation_by_pip.png', dpi=300)
+    print('Done.')
 
 
 if __name__ == '__main__':
