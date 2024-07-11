@@ -11,6 +11,7 @@ workflow annotate_eqtl_variants {
         File ABC_peakfile
         File plink_bim_path
         File gtex_vep
+        File? peak_predictor_file
         String dest_dir
         String git_branch = "main"
     }
@@ -56,6 +57,16 @@ workflow annotate_eqtl_variants {
             git_branch=git_branch
     }
 
+    if (defined(peak_predictor_file)) {
+        call ATAC_peak_predictor {
+            input:
+                peakfile=peak_predictor_file,
+                finemapped_annotations=merge_fm_annotations.fm_annotations,
+                fm_group_names=fm_group_names,
+                git_branch=git_branch
+        }
+    }
+
     Array[File] all_var_results = [gtex_vep_overlap.all_variant_peaks_gtex]
     Array[File] peak_res_only = [peak_overlaps.all_variant_peak_stats]
     Array[File] gtex_annotation_plot = [make_gtex_annotation_plot.gtex_annotations_plot]
@@ -73,6 +84,10 @@ workflow annotate_eqtl_variants {
         Array[File] finemapped_annotations = merge_fm_annotations.fm_annotations
         File gtex_annotations_plot = make_gtex_annotation_plot.gtex_annotations_plot
         Array[File] pip_bin_plots = make_pip_bin_plot.pip_bin_plots
+        Array[File]? peak_pip_plots = ATAC_peak_predictor.peak_pip_plots
+        Array[File]? roc_curves = ATAC_peak_predictor.roc_curves
+        Array[File]? model_beta_dfs = ATAC_peak_predictor.model_beta_dfs
+        Array[File]? model_peak_predictions = ATAC_peak_predictor.model_peak_predictions
     }
 }
 
@@ -98,7 +113,6 @@ task peak_overlaps {
         for peakfile in ~{sep=" " peakfiles}
         do
             echo $peakfile
-            # micromamba run -n tools2 python3 /app/eqtl_annotations/get_finemap_bed.py ${FM_ARRAY[$i]} ${NAME_ARRAY[$i]}
             zcat $peakfile | sort -k1,1 -k2,2n | cut -f -3 > tmp.bed
             # overwrite
             cat tmp.bed | gzip -c > $peakfile
@@ -141,9 +155,9 @@ task gtex_vep_overlap {
     Int disk_size = 50 + floor(size(gtex_vep, "GB"))
 
     command {
-    set -ex
-    (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
-    micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -p ${all_variant_peak_stats} -a ${abc_variant_peak_stats} -g ${gtex_vep}
+        set -ex
+        (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
+        micromamba run -n tools2 python3 /app/eqtl_annotations/annotate_gtex_vep.py -p ${all_variant_peak_stats} -a ${abc_variant_peak_stats} -g ${gtex_vep}
     }
 
     output {
@@ -235,4 +249,44 @@ task make_pip_bin_plot {
         cpu: 1
         memory: "16GB"
     }
+}
+
+task ATAC_peak_predictor {
+    input {
+        File? peakfile #this has to be ? bc wdl is dumb. but it has to be defined for the task to run.
+        Array[File] finemapped_annotations
+        Array[String] fm_group_names
+        String git_branch
+    }
+
+    command <<<
+        set -ex
+        (git clone https://github.com/broadinstitute/eQTL_annotations.git /app ; cd /app ; git checkout ${git_branch})
+        micromamba -n tools2 install bioconda::bedtools -y
+
+        # this is assuming .bed not .bed.gz but can edit this to make it a changeable input.
+        cat ~{peakfile} | sort -k1,1 -k2,2n | cut -f -3 > peakfile.bed
+        for fm_file in ~{sep=" " finemapped_annotations}
+        do
+            micromamba run -n tools2 python3 /app/eqtl_annotations/get_finemap_bed.py $fm_file
+            !zcat sample_vars.bed.gz| sort -k1,1 -k2,2n  | gzip -c > sample_vars.sorted.bed.gz
+            micromamba run -n tools2 bedtools closest -t first -d -a sample_vars.sorted.bed.gz -b peakfile.bed | gzip -c > peak_dists.bed.gz
+            micromamba run -n tools2 python3 /app/eqtl_annotations/peak_predictor.py -f $fm_file -g ~{sep=" " fm_group_names}
+        done
+
+    >>>
+
+    output {
+        Array[File] peak_pip_plots = glob("*_peak_pip_enrichment_by_category.png")
+        Array[File] roc_curves = glob("*_peak_predictor_roc.png")
+        Array[File] model_beta_dfs = glob("*_peaks_betas.parquet")
+        Array[File] model_peak_predictions = glob("*_peak_preds.parquet")
+    }
+
+    runtime {
+        docker: 'us.gcr.io/landerlab-atacseq-200218/hgrm_multiome_cluster_processing:0.6'
+        cpu: 4
+        memory: "32GB"
+    }
+
 }
