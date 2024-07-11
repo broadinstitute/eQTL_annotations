@@ -204,7 +204,7 @@ def make_enrichment_plot(annots_with_pred_bin, group_name):
     ax.set_ylabel("Fold Enrichment", fontsize=25)
     ax.set_xlabel("")
     ax.legend(title="", fontsize=15)
-    # ax.set_title('Annotations Enrichment Compared to Peak is Low Values', fontsize=25)
+    ax.set_title(f'{group_name} Peak Enrichment by Max PIP, \n with Model Bin Groups', fontsize=25)
     for loc in np.arange(0, 16, 2.5):
         ax.axhline(loc, c="k", ls="--", lw=0.35, zorder=0)
     # clip axis
@@ -401,7 +401,7 @@ def main():
     fig, ax = plt.subplots(figsize=(10,8))
     pr_display = PrecisionRecallDisplay(precision=precision, recall=recall).plot(ax=ax)
     ax.set_ylim(0)
-    ax.set_title('Train/Test ROC Curve, High and Low Peaks', fontsize=30)
+    ax.set_title(f'{group_name} Train/Test ROC Curve, High and Low Peaks', fontsize=30)
     fpr, tpr, thresholds = metrics.roc_curve(y_real, y_prob, pos_label=1)
     ax.text(x=.8,y=.8, s=f'AUC: {round(metrics.auc(fpr, tpr), 3)}', fontsize=20)
     fig.savefig(f'{group_name}_peak_predictor_roc.png', dpi=300)
