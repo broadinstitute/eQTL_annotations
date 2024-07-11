@@ -270,7 +270,7 @@ task ATAC_peak_predictor {
         do
             echo $fm_file
             micromamba run -n tools2 python3 /app/eqtl_annotations/get_finemap_bed.py $fm_file
-            zcat sample_vars.bed.gz| sort -k1,1 -k2,2n  | gzip -c > sample_vars.sorted.bed.gz
+            zcat sample_vars.bed.gz | sort -k1,1 -k2,2n  | gzip -c > sample_vars.sorted.bed.gz
             micromamba run -n tools2 bedtools closest -t first -d -a sample_vars.sorted.bed.gz -b peakfile.bed | gzip -c > peak_dists.bed.gz
             micromamba run -n tools2 python3 /app/eqtl_annotations/peak_predictor.py -f $fm_file -g ~{sep=" " fm_group_names}
         done
