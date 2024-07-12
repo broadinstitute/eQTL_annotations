@@ -11,6 +11,9 @@ Overall: Annotates variants from our finemapped sets (eQTL pipeline) with inform
 * Plot all finemapped files together, with enrichment & proportion of variants in each annotation category across all the variants
 
 ## Peak Predictions
+Optional section of the pipeline, dependent on the peak predictor file input to the pipeline (which for now, should be an ATAC peak file in bed format.)
+Model: a logistic regression model that takes in each peak-gene pair in the format outlined below.
+
 * Variants each have a set of annotations, a distance, a gene link, and a PIP
 * Label each variant-annot-gene-pip with a peakname
 * For each peak-gene pair:
@@ -19,7 +22,6 @@ Overall: Annotates variants from our finemapped sets (eQTL pipeline) with inform
     * take max of PIP
 * Output = peak-maxpip-annots-distance-gene
 
-Model: a logistic regression model that takes in each peak-gene pair and the output from above.
 Train on high and low PIP peak-gene pairs (PIP > 0.1, PIP < 0.03>) in all other chromosomes (leave-one-out chr) to get AUC.
 Score all peak-gene pairs w/ leave-one-out chromosome training.
 
