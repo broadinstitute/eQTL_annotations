@@ -22,7 +22,7 @@ def main():
     # this is so bad
     non_annotations = ['phenotype_id', 'variant_id', 'pip', 'af', 'cs_id', 'start_distance',
                         'ma_samples', 'ma_count', 'pval_nominal', 'slope', 'slope_se','bins',
-                        'chr', 'ref_allele', 'alt_allele']
+                        'chr', 'ref_allele', 'alt_allele', 'pos']
 
     print('Reading in all variant annotations & adding in peak info.')
     all_variant_annots = pd.read_parquet(args.variant_annotations)
