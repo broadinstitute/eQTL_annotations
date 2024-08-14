@@ -23,7 +23,8 @@ def main():
                     'open_chromatin_region_d':'Open chromatin', 'promoter_flanking_region_d':'Promoter Flanking',
                     'frameshift_variant_d':'Frameshift Variant', 'stop_gained_d':'Stop Gained',
                     'non_coding_transcript_exon_variant_d':'Non-coding transcript exon variant'}
-    non_annotations = ['phenotype_id', 'variant_id', 'pip', 'af', 'cs_id', 'start_distance', 'ma_samples', 'ma_count', 'pval_nominal', 'slope', 'slope_se','bins']
+    non_annotations = ['phenotype_id', 'variant_id', 'pip', 'af', 'cs_id', 'start_distance', 'ma_samples', 'ma_count',
+                       'pval_nominal', 'slope', 'slope_se','bins', 'chr', 'ref_allele', 'alt_allele']
 
     print('Reading in fm data.')
     fm_dict = {}
