@@ -304,7 +304,8 @@ def main():
         - vars_in_peaks.shape[0],
     )
 
-    #TODO: Add output of annotations df with the peak names? before taking groupby? the var_annots df?
+    #Add output of annotations df with the peak names? before taking groupby? the var_annots df?
+    vars_in_peaks.to_parquet(f'{group_name}_peak_names_with_finemapped.parquet')
 
     peak_gene_groups = vars_in_peaks.groupby(["phenotype_id", "peak_name"]).groups.keys()
     vars_in_peaks.set_index(["phenotype_id", "peak_name"], inplace=True)

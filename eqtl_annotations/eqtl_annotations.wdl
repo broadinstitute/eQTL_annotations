@@ -88,6 +88,7 @@ workflow annotate_eqtl_variants {
         Array[File]? roc_curves = ATAC_peak_predictor.roc_curves
         Array[File]? model_beta_dfs = ATAC_peak_predictor.model_beta_dfs
         Array[File]? model_peak_predictions = ATAC_peak_predictor.model_peak_predictions
+        Array[File]? peakname_finemapped_variants = ATAC_peak_predictor.peakname_finemapped_variants
     }
 }
 
@@ -282,6 +283,7 @@ task ATAC_peak_predictor {
         Array[File] roc_curves = glob("*_peak_predictor_roc.png")
         Array[File] model_beta_dfs = glob("*_peaks_betas.parquet")
         Array[File] model_peak_predictions = glob("*_peak_preds.parquet")
+        Array[File] peakname_finemapped_variants = glob("_peak_names_with_finemapped.parquet")
     }
 
     runtime {
