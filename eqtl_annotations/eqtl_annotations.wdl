@@ -283,7 +283,7 @@ task ATAC_peak_predictor {
         Array[File] roc_curves = glob("*_peak_predictor_roc.png")
         Array[File] model_beta_dfs = glob("*_peaks_betas.parquet")
         Array[File] model_peak_predictions = glob("*_peak_preds.parquet")
-        Array[File] peakname_finemapped_variants = glob("_peak_names_with_finemapped.parquet")
+        Array[File] peakname_finemapped_variants = glob("*_peak_names_with_finemapped.parquet")
     }
 
     runtime {
