@@ -45,7 +45,8 @@ def main():
         fm_annot_df['bins'] = pd.cut(fm_annot_df.pip, bins=bins, labels=labels, right=True, include_lowest=True)
         # drop splice annotations or frameshift
         fm_annot_df = fm_annot_df.loc[:, ~fm_annot_df.columns.str.contains('splice|frameshift')]
-        # annotate peaks categorically as well
+        # annotate peaks c
+        # ategorically as well
         peaks_500 = fm_annot_df.loc[:, fm_annot_df.columns.str.contains('peak_dist')] < 500
         in_a_peak = fm_annot_df.loc[:, fm_annot_df.columns.str.contains('peak_dist')] == 0
         in_a_peak.columns = in_a_peak.columns.str.strip('peak_dist') + '_in_a_peak'
@@ -67,7 +68,7 @@ def main():
                     axis=1)
 
         if fm_annot_df.columns.str.contains('CTCF_D').any():
-            for day in "D2 D4 D7".split():
+            for day in "D0 D2 D4 D7".split():
                 if not fm_annot_df.columns.str.contains(f'CTCF_{day}').any():
                     continue
                 only_in_ctcf = ((fm_annot_df.loc[:, fm_annot_df.columns.str.contains('CTCF_D') &
